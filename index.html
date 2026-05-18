@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analisador de Nichos — Mercado Livre</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; min-height: 100vh; }
+    .container { max-width: 800px; margin: 0 auto; padding: 2rem 1rem; }
+    h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+    .subtitle { font-size: 14px; color: #666; margin-bottom: 24px; }
+    .label { font-size: 11px; font-weight: 600; color: #888; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 8px; }
+    .nicho-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-bottom: 16px; }
+    .nicho-btn { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 10px 12px; font-size: 13px; color: #1a1a1a; cursor: pointer; text-align: left; transition: all .15s; }
+    .nicho-btn:hover { border-color: #3483fa; background: #f0f6ff; }
+    .nicho-btn.active { border: 2px solid #3483fa; background: #f0f6ff; color: #3483fa; font-weight: 600; }
+    .nicho-btn .icon { font-size: 20px; margin-bottom: 4px; display: block; }
+    .custom-row { display: flex; gap: 8px; margin-bottom: 24px; }
+    .custom-row input { flex: 1; border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px 14px; font-size: 14px; outline: none; }
+    .custom-row input:focus { border-color: #3483fa; }
+    .btn-primary { background: #3483fa; color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .15s; white-space: nowrap; }
+    .btn-primary:hover { background: #2968d8; }
+    .btn-secondary { background: #fff; color: #3483fa; border: 1px solid #3483fa; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .progress-wrap { margin-bottom: 20px; background: #fff; border-radius: 10px; padding: 1rem; border: 1px solid #e0e0e0; }
+    .progress-track { height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #3483fa; border-radius: 3px; transition: width .4s; }
+    .progress-text { font-size: 12px; color: #888; margin-top: 8px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px; }
+    .summary-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 1rem; }
+    .summary-card .num { font-size: 22px; font-weight: 700; color: #1a1a1a; }
+    .summary-card .desc { font-size: 12px; color: #888; margin-top: 2px; }
+    .opp-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 1.1rem; margin-bottom: 10px; }
+    .opp-card.top-card { border: 2px solid #00a650; }
+    .top-badge { display: inline-block; background: #e8f9ee; color: #00a650; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-bottom: 8px; }
+    .opp-title { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+    .opp-termo { font-size: 12px; color: #888; margin-bottom: 10px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .tag { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+    .tg { background: #e8f9ee; color: #007a3d; }
+    .ta { background: #fff8e6; color: #9a6700; }
+    .tr { background: #fef0f0; color: #b22222; }
+    .opp-text { font-size: 13px; color: #444; line-height: 1.55; margin-bottom: 4px; }
+    .score-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+    .score-track { flex: 1; height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden; }
+    .score-fill { height: 100%; border-radius: 3px; }
+    .score-label { font-size: 13px; font-weight: 700; min-width: 70px; text-align: right; }
+    .empty { text-align: center; padding: 3rem; color: #888; font-size: 15px; }
+    .error { background: #fef0f0; color: #b22222; border-radius: 10px; padding: 1rem; font-size: 13px; border: 1px solid #f5c0c0; }
+    .resumo-text { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 16px; background: #fff; border-radius: 10px; padding: 1rem; border: 1px solid #e0e0e0; }
+    #results { display: none; }
+    .action-row { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Analisador de Nichos</h1>
+  <p class="subtitle">Descubra os melhores produtos para dropshipping no Mercado Livre</p>
+
+  <div class="label">Nichos populares</div>
+  <div class="nicho-grid">
+    <button class="nicho-btn" onclick="sel(this,'moda masculina')"><span class="icon">👕</span>Moda masculina</button>
+    <button class="nicho-btn" onclick="sel(this,'fitness musculação')"><span class="icon">🏋️</span>Fitness</button>
+    <button class="nicho-btn" onclick="sel(this,'home office')"><span class="icon">💻</span>Home office</button>
+    <button class="nicho-btn" onclick="sel(this,'decoração casa')"><span class="icon">🏠</span>Casa e décor</button>
+    <button class="nicho-btn" onclick="sel(this,'produtos pet')"><span class="icon">🐾</span>Pet</button>
+    <button class="nicho-btn" onclick="sel(this,'beleza skincare')"><span class="icon">✨</span>Beleza</button>
+  </div>
+
+  <div class="label">Ou digite um nicho</div>
+  <div class="custom-row">
+    <input type="text" id="custom" placeholder='Ex: "roupas femininas plus size"' onkeydown="if(event.key==='Enter') iniciar(this.value)" />
+    <button class="btn-primary" onclick="iniciar(document.getElementById('custom').value)">Explorar</button>
+  </div>
+
+  <div id="prog-area" style="display:none" class="progress-wrap">
+    <div class="progress-track"><div class="progress-fill" id="prog-bar" style="width:0%"></div></div>
+    <div class="progress-text" id="prog-text">Iniciando...</div>
+  </div>
+
+  <div id="results"></div>
+</div>
+
+<script>
+  const SUBCATEGORIAS = {
+    'moda masculina':    ['camiseta masculina premium','calça jeans masculina slim','polo masculina','bermuda masculina esportiva','jaqueta masculina'],
+    'fitness musculação':['estação musculação casa','halteres ajustáveis kit','bicicleta ergométrica','banco supino ajustável','corda pular profissional'],
+    'home office':       ['escrivaninha home office','cadeira ergonômica escritório','suporte monitor','teclado mecânico','luminária led mesa'],
+    'decoração casa':    ['quadro decorativo sala grande','tapete sala moderno','luminária decorativa pendente','vaso decorativo sala','prateleira parede madeira'],
+    'produtos pet':      ['cama pet ortopédica','comedouro automático pet','arranhador gato grande','coleira antipulgas','kit banho pet'],
+    'beleza skincare':   ['sérum vitamina c facial','protetor solar fps 50','máscara capilar hidratação','kit skincare completo','esponja maquiagem profissional'],
+  };
+
+  function getSubcats(nicho) {
+    const key = Object.keys(SUBCATEGORIAS).find(k => nicho.toLowerCase().includes(k.split(' ')[0]));
+    return key ? SUBCATEGORIAS[key] : [nicho+' barato', nicho+' premium', nicho+' kit', nicho+' profissional', nicho+' completo'];
+  }
+
+  function sel(btn, nicho) {
+    document.querySelectorAll('.nicho-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('custom').value = '';
+    iniciar(nicho);
+  }
+
+  function setProgress(pct, texto) {
+    document.getElementById('prog-bar').style.width = pct + '%';
+    document.getElementById('prog-text').textContent = texto;
+  }
+
+  async function buscarML(termo) {
+    const res = await fetch(`/api/search?q=${encodeURIComponent(termo)}&limit=8`);
+    if (!res.ok) throw new Error('Erro na API');
+    return res.json();
+  }
+
+  function calcScore(total, avg, sold, sellers, hasFab) {
+    let s = 0;
+    if (avg >= 500) s += 30; else if (avg >= 200) s += 15; else s += 5;
+    if (sold >= 200) s += 25; else if (sold >= 80) s += 15; else if (sold >= 30) s += 8;
+    if (sellers <= 5) s += 25; else if (sellers <= 10) s += 15; else s += 5;
+    if (total >= 200) s += 15; else if (total >= 50) s += 8;
+    if (hasFab) s -= 15;
+    return Math.min(Math.max(s, 0), 100);
+  }
+
+  async function iniciar(nicho) {
+    nicho = nicho?.trim();
+    if (!nicho) return;
+
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('prog-area').style.display = 'block';
+    setProgress(5, 'Iniciando análise...');
+
+    const subs = getSubcats(nicho);
+    const resultados = [];
+
+    for (let i = 0; i < subs.length; i++) {
+      const pct = Math.round(10 + (i / subs.length) * 85);
+      setProgress(pct, `Analisando: "${subs[i]}" (${i+1}/${subs.length})`);
+      try {
+        const data = await buscarML(subs[i]);
+        const items = data.results || [];
+        if (!items.length) continue;
+        const prices = items.map(x => x.price).filter(Boolean);
+        const avg = prices.reduce((a,b)=>a+b,0)/prices.length;
+        const sold = items.reduce((a,x)=>a+(x.sold_quantity||0),0);
+        const sellers = new Set(items.map(x=>x.seller?.id)).size;
+        const hasFab = items.some(x=>x.official_store_id);
+        const total = data.paging?.total || 0;
+        const score = calcScore(total, avg, sold, sellers, hasFab);
+        const topItem = items[0];
+        resultados.push({ termo: subs[i], avg, sold, sellers, hasFab, total, score, topItem });
+      } catch(e) {}
+      await new Promise(r => setTimeout(r, 200));
+    }
+
+    setProgress(100, 'Concluído!');
+    setTimeout(() => { document.getElementById('prog-area').style.display = 'none'; }, 600);
+
+    renderResultados(resultados, nicho);
+  }
+
+  function renderResultados(lista, nicho) {
+    const el = document.getElementById('results');
+    if (!lista.length) {
+      el.innerHTML = '<div class="empty">Nenhum resultado encontrado. Tente outro nicho.</div>';
+      el.style.display = 'block';
+      return;
+    }
+
+    lista.sort((a,b) => b.score - a.score);
+    const avgTicket = Math.round(lista.reduce((a,p)=>a+p.avg,0)/lista.length);
+    const totalSold = lista.reduce((a,p)=>a+p.sold,0);
+    const top = lista[0];
+
+    let html = `
+      <div class="label" style="margin-bottom:8px">Resumo — ${nicho}</div>
+      <div class="summary-grid">
+        <div class="summary-card"><div class="num">${lista.length}</div><div class="desc">sub-produtos analisados</div></div>
+        <div class="summary-card"><div class="num">R$${avgTicket.toLocaleString('pt-BR')}</div><div class="desc">ticket médio</div></div>
+        <div class="summary-card"><div class="num">${totalSold.toLocaleString('pt-BR')}</div><div class="desc">vendas combinadas</div></div>
+        <div class="summary-card"><div class="num" style="color:${top.score>=70?'#00a650':top.score>=45?'#9a6700':'#b22222'}">${top.score}/100</div><div class="desc">melhor score</div></div>
+      </div>
+      <div class="label" style="margin-bottom:10px">Oportunidades rankeadas</div>`;
+
+    lista.forEach((p, i) => {
+      const isTop = i === 0;
+      const scoreColor = p.score >= 70 ? '#00a650' : p.score >= 45 ? '#9a6700' : '#b22222';
+      const ticketTag = p.avg >= 500 ? `<span class="tag tg">ticket R$${Math.round(p.avg).toLocaleString('pt-BR')}</span>`
+        : p.avg >= 200 ? `<span class="tag ta">ticket R$${Math.round(p.avg).toLocaleString('pt-BR')}</span>`
+        : `<span class="tag tr">ticket R$${Math.round(p.avg).toLocaleString('pt-BR')}</span>`;
+      const soldTag = p.sold >= 150 ? `<span class="tag tg">${p.sold} vendidos</span>`
+        : p.sold >= 50 ? `<span class="tag ta">${p.sold} vendidos</span>`
+        : `<span class="tag tr">${p.sold} vendidos</span>`;
+      const compTag = p.sellers <= 5 ? `<span class="tag tg">${p.sellers} vendedores</span>`
+        : p.sellers <= 10 ? `<span class="tag ta">${p.sellers} vendedores</span>`
+        : `<span class="tag tr">${p.sellers} vendedores</span>`;
+      const fabTag = p.hasFab ? `<span class="tag tr">fabricante presente</span>` : `<span class="tag tg">sem fabricante dominante</span>`;
+
+      html += `
+        <div class="opp-card ${isTop?'top-card':''}">
+          ${isTop ? '<div class="top-badge">Melhor oportunidade</div>' : ''}
+          <div class="opp-title">${i+1}. ${p.termo}</div>
+          <div class="opp-termo">Buscar no ML: "${p.termo}" · ${p.total.toLocaleString('pt-BR')} resultados</div>
+          <div class="tags">${ticketTag}${soldTag}${compTag}${fabTag}</div>
+          <div class="score-row">
+            <div class="score-track"><div class="score-fill" style="width:${p.score}%;background:${scoreColor}"></div></div>
+            <div class="score-label" style="color:${scoreColor}">Score ${p.score}/100</div>
+          </div>
+        </div>`;
+    });
+
+    html += `
+      <div class="action-row">
+        <a href="https://www.mercadolivre.com.br/jm/search?q=${encodeURIComponent(top.termo)}" target="_blank">
+          <button class="btn-primary">Ver #1 no Mercado Livre →</button>
+        </a>
+        <button class="btn-secondary" onclick="novaAnalise()">Nova análise</button>
+      </div>`;
+
+    el.innerHTML = html;
+    el.style.display = 'block';
+  }
+
+  function novaAnalise() {
+    document.getElementById('results').style.display = 'none';
+    document.querySelectorAll('.nicho-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('custom').value = '';
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+</script>
+</body>
+</html>
