@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Comparar Produtos — ML Analyzer</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a}
+    nav{background:#fff;border-bottom:1px solid #e0e0e0;padding:0 2rem;display:flex;align-items:center;height:52px}
+    nav a{text-decoration:none;color:#555;font-size:14px;padding:0 16px;height:52px;display:flex;align-items:center;border-bottom:2px solid transparent}
+    nav a.active,nav a:hover{color:#3483fa;border-bottom-color:#3483fa}
+    nav .logo{font-weight:700;color:#1a1a1a;margin-right:24px;font-size:15px}
+    .container{max-width:960px;margin:0 auto;padding:2rem 1rem}
+    h1{font-size:22px;font-weight:700;margin-bottom:4px}
+    .subtitle{font-size:14px;color:#666;margin-bottom:24px}
+    .label{font-size:11px;font-weight:700;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+    .search-row{display:flex;gap:8px;margin-bottom:24px}
+    .search-row input{flex:1;border:1px solid #e0e0e0;border-radius:8px;padding:10px 14px;font-size:14px;outline:none}
+    .search-row input:focus{border-color:#3483fa}
+    .btn{background:#3483fa;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer}
+    .btn:hover{background:#2968d8}
+    .btn-outline{background:#fff;color:#3483fa;border:1px solid #3483fa;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+    @media(max-width:600px){.grid2{grid-template-columns:1fr}}
+    .prod-card{background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:1rem}
+    .prod-card.winner{border:2px solid #00a650}
+    .winner-badge{display:inline-block;background:#e8f9ee;color:#00a650;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:8px}
+    .prod-title{font-size:14px;font-weight:600;line-height:1.4;margin-bottom:12px}
+    .stat-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px}
+    .stat-row:last-child{border-bottom:none}
+    .stat-label{color:#888}
+    .stat-val{font-weight:600}
+    .stat-val.green{color:#00a650}
+    .stat-val.red{color:#b22222}
+    .stat-val.amber{color:#9a6700}
+    .margin-section{background:#f8f8f8;border-radius:8px;padding:1rem;margin-top:12px}
+    .margin-section .label{margin-bottom:6px}
+    .margin-input-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+    .margin-input-row label{font-size:13px;color:#555;white-space:nowrap}
+    .margin-input-row input{width:100px;border:1px solid #e0e0e0;border-radius:6px;padding:6px 10px;font-size:13px;outline:none}
+    .margin-result{font-size:15px;font-weight:700;margin-top:4px}
+    .reviews-section{margin-top:12px}
+    .review-item{background:#fef0f0;border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12px;color:#555;line-height:1.5}
+    .review-item.pos{background:#e8f9ee}
+    .stars{color:#f5a623;font-size:13px}
+    .tag{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;display:inline-block;margin:2px}
+    .tg{background:#e8f9ee;color:#007a3d}
+    .ta{background:#fff8e6;color:#9a6700}
+    .tr{background:#fef0f0;color:#b22222}
+    .result-list{display:flex;flex-direction:column;gap:8px}
+    .result-item{background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:.9rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:border-color .15s}
+    .result-item:hover{border-color:#3483fa}
+    .result-item .ri-title{font-size:13px;font-weight:600;flex:1;margin-right:12px}
+    .result-item .ri-price{font-size:14px;font-weight:700;white-space:nowrap}
+    .result-item .ri-sold{font-size:12px;color:#888}
+    .slot-label{font-size:13px;font-weight:600;margin-bottom:8px;color:#3483fa}
+    .loading{text-align:center;padding:2rem;color:#888;font-size:14px}
+    #slot-a-results,#slot-b-results{display:none}
+    #comparison{display:none}
+  </style>
+</head>
+<body>
+<nav>
+  <span class="logo">ML Analyzer</span>
+  <a href="/">Nichos</a>
+  <a href="/comparar" class="active">Comparar</a>
+  <a href="/tendencias">Tendências</a>
+</nav>
+<div class="container">
+  <h1>Comparar Produtos</h1>
+  <p class="subtitle">Busque dois produtos e compare métricas, margem e avaliações lado a lado</p>
+
+  <div class="grid2">
+    <div>
+      <div class="slot-label">Produto A</div>
+      <div class="search-row">
+        <input type="text" id="qa" placeholder='Ex: "estação musculação"' onkeydown="if(event.key==='Enter')buscar('a')"/>
+        <button class="btn" onclick="buscar('a')">Buscar</button>
+      </div>
+      <div id="slot-a-results"></div>
+    </div>
+    <div>
+      <div class="slot-label">Produto B</div>
+      <div class="search-row">
+        <input type="text" id="qb" placeholder='Ex: "bicicleta ergométrica"' onkeydown="if(event.key==='Enter')buscar('b')"/>
+        <button class="btn" onclick="buscar('b')">Buscar</button>
+      </div>
+      <div id="slot-b-results"></div>
+    </div>
+  </div>
+
+  <div id="comparison"></div>
+</div>
+
+<script>
+const selected={a:null,b:null};
+
+async function buscar(slot){
+  const q=document.getElementById('q'+slot).value.trim();
+  if(!q)return;
+  const el=document.getElementById('slot-'+slot+'-results');
+  el.style.display='block';
+  el.innerHTML='<div class="loading">Buscando...</div>';
+  try{
+    const r=await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=6`);
+    const d=await r.json();
+    const items=(d.results||[]);
+    if(!items.length){el.innerHTML='<p style="color:#888;font-size:13px">Nenhum resultado.</p>';return;}
+    let html='<div class="result-list">';
+    items.forEach(item=>{
+      html+=`<div class="result-item" onclick="selecionar('${slot}','${item.id}','${item.title.replace(/'/g,'').substring(0,60)}',${item.price},${item.sold_quantity||0},${item.reviews?.rating_average||0})">
+        <div>
+          <div class="ri-title">${item.title.substring(0,60)}${item.title.length>60?'…':''}</div>
+          <div class="ri-sold">${item.sold_quantity||0} vendidos · ${item.reviews?.rating_average?'★'+item.reviews.rating_average.toFixed(1):''}</div>
+        </div>
+        <div class="ri-price">R$${Math.round(item.price).toLocaleString('pt-BR')}</div>
+      </div>`;
+    });
+    html+='</div>';
+    el.innerHTML=html;
+  }catch(e){el.innerHTML='<p style="color:#b22222;font-size:13px">Erro: '+e.message+'</p>';}
+}
+
+async function selecionar(slot,id,title,price,sold,rating){
+  selected[slot]={id,title,price,sold,rating};
+  document.getElementById('slot-'+slot+'-results').innerHTML=`<div style="background:#e8f9ee;border-radius:8px;padding:10px 12px;font-size:13px;color:#007a3d;font-weight:600">✓ ${title.substring(0,50)}… — R$${Math.round(price).toLocaleString('pt-BR')}</div>`;
+  if(selected.a&&selected.b) await renderComparacao();
+}
+
+async function renderComparacao(){
+  const comp=document.getElementById('comparison');
+  comp.style.display='block';
+  comp.innerHTML='<div class="loading">Carregando detalhes dos produtos...</div>';
+
+  async function getDetalhes(id){
+    try{
+      const r=await fetch(`/api/produto?id=${id}`);
+      return r.ok?r.json():null;
+    }catch(e){return null;}
+  }
+
+  const [da,db]=await Promise.all([getDetalhes(selected.a.id),getDetalhes(selected.b.id)]);
+
+  function buildCard(s,d,isWinner){
+    const item=selected[s];
+    const rating=d?.reviews?.rating_average||item.rating||0;
+    const ratingCol=rating>=4.5?'green':rating>=4?'amber':'red';
+    const soldCol=item.sold>=500?'green':item.sold>=100?'amber':'red';
+
+    let html=`<div class="prod-card ${isWinner?'winner':''}">
+      ${isWinner?'<div class="winner-badge">Melhor oportunidade</div>':''}
+      <div class="prod-title">${item.title.substring(0,70)}…</div>
+      <div class="stat-row"><span class="stat-label">Preço</span><span class="stat-val">R$${Math.round(item.price).toLocaleString('pt-BR')}</span></div>
+      <div class="stat-row"><span class="stat-label">Vendas totais</span><span class="stat-val ${soldCol}">${item.sold.toLocaleString('pt-BR')}</span></div>
+      <div class="stat-row"><span class="stat-label">Avaliação</span><span class="stat-val ${ratingCol}">${rating?'★ '+rating.toFixed(1):'—'} (${d?.reviews?.total||0} avaliações)</span></div>
+      <div class="stat-row"><span class="stat-label">Avaliações negativas</span><span class="stat-val ${(d?.reviews?.one_star||0)>50?'red':'green'}">${d?.reviews?.one_star||0} de 1★</span></div>
+      <div class="stat-row"><span class="stat-label">Frete grátis</span><span class="stat-val ${d?.free_shipping?'green':'amber'}">${d?.free_shipping?'Sim':'Não'}</span></div>
+      <div class="stat-row"><span class="stat-label">Vendedor</span><span class="stat-val">${d?.seller?.nickname||'—'}</span></div>`;
+
+    if(d?.reviews?.top_negative?.length){
+      html+=`<div class="reviews-section"><div class="label" style="margin-bottom:6px;margin-top:10px">Principais reclamações</div>`;
+      d.reviews.top_negative.slice(0,3).forEach(r=>{
+        html+=`<div class="review-item">${r.content?r.content.substring(0,120):'Sem texto'}…</div>`;
+      });
+      html+=`</div>`;
+    }
+
+    html+=`<div class="margin-section">
+      <div class="label">Calculadora de margem</div>
+      <div class="margin-input-row">
+        <label>Custo fornecedor: R$</label>
+        <input type="number" id="custo-${s}" placeholder="Ex: ${Math.round(item.price*0.5)}" oninput="calcMargem('${s}',${item.price})"/>
+      </div>
+      <div class="margin-result" id="margem-${s}"></div>
+    </div>`;
+
+    if(d?.permalink){
+      html+=`<div style="margin-top:12px"><a href="${d.permalink}" target="_blank"><button class="btn-outline" style="width:100%">Ver no Mercado Livre →</button></a></div>`;
+    }
+
+    html+=`</div>`;
+    return html;
+  }
+
+  const scoreA=(selected.a.sold*0.4)+(selected.a.rating*10)+(da?.reviews?.five_star||0)*0.1;
+  const scoreB=(selected.b.sold*0.4)+(selected.b.rating*10)+(db?.reviews?.five_star||0)*0.1;
+  const aWins=scoreA>=scoreB;
+
+  comp.innerHTML=`
+    <div class="label" style="margin-bottom:12px">Comparação lado a lado</div>
+    <div class="grid2">
+      ${buildCard('a',da,aWins)}
+      ${buildCard('b',db,!aWins)}
+    </div>
+    <button class="btn-outline" onclick="resetar()">← Nova comparação</button>`;
+}
+
+function calcMargem(slot,priceVenda){
+  const custo=parseFloat(document.getElementById('custo-'+slot).value)||0;
+  const el=document.getElementById('margem-'+slot);
+  if(!custo){el.textContent='';return;}
+  const mlFee=priceVenda*0.12;
+  const frete=priceVenda*0.05;
+  const lucro=priceVenda-custo-mlFee-frete;
+  const pct=(lucro/priceVenda*100).toFixed(1);
+  const col=lucro>=0&&pct>=30?'#00a650':lucro>=0?'#9a6700':'#b22222';
+  el.style.color=col;
+  el.textContent=`Margem: ${pct}% · Lucro: R$${Math.round(lucro).toLocaleString('pt-BR')} por venda`;
+}
+
+function resetar(){
+  selected.a=null;selected.b=null;
+  document.getElementById('comparison').style.display='none';
+  document.getElementById('slot-a-results').style.display='none';
+  document.getElementById('slot-b-results').style.display='none';
+  document.getElementById('qa').value='';
+  document.getElementById('qb').value='';
+}
+
+// Pré-preencher do nicho se vier com ?q=
+const urlQ=new URLSearchParams(window.location.search).get('q');
+if(urlQ){document.getElementById('qa').value=urlQ;buscar('a');}
+</script>
+</body>
+</html>

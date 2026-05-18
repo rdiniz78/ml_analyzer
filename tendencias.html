@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tendências — ML Analyzer</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a}
+    nav{background:#fff;border-bottom:1px solid #e0e0e0;padding:0 2rem;display:flex;align-items:center;height:52px}
+    nav a{text-decoration:none;color:#555;font-size:14px;padding:0 16px;height:52px;display:flex;align-items:center;border-bottom:2px solid transparent}
+    nav a.active,nav a:hover{color:#3483fa;border-bottom-color:#3483fa}
+    nav .logo{font-weight:700;color:#1a1a1a;margin-right:24px;font-size:15px}
+    .container{max-width:860px;margin:0 auto;padding:2rem 1rem}
+    h1{font-size:22px;font-weight:700;margin-bottom:4px}
+    .subtitle{font-size:14px;color:#666;margin-bottom:24px}
+    .label{font-size:11px;font-weight:700;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px}
+    .trend-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:24px}
+    .trend-card{background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:1rem;cursor:pointer;transition:all .15s;text-decoration:none;display:block}
+    .trend-card:hover{border-color:#3483fa;transform:translateY(-1px)}
+    .trend-rank{font-size:11px;font-weight:700;color:#888;margin-bottom:6px}
+    .trend-keyword{font-size:14px;font-weight:600;color:#1a1a1a;line-height:1.3;margin-bottom:8px}
+    .trend-bar-wrap{height:4px;background:#f0f0f0;border-radius:2px;overflow:hidden}
+    .trend-bar{height:100%;background:#3483fa;border-radius:2px}
+    .btn{background:#3483fa;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer}
+    .btn:hover{background:#2968d8}
+    .btn-outline{background:#fff;color:#3483fa;border:1px solid #3483fa;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block}
+    .loading{text-align:center;padding:3rem;color:#888;font-size:14px}
+    .updated{font-size:12px;color:#888;margin-bottom:16px}
+    .action-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .alert{background:#fff8e6;border:1px solid #f5d87a;border-radius:10px;padding:1rem;font-size:13px;color:#7a5c00;margin-bottom:16px}
+  </style>
+</head>
+<body>
+<nav>
+  <span class="logo">ML Analyzer</span>
+  <a href="/">Nichos</a>
+  <a href="/comparar">Comparar</a>
+  <a href="/tendencias" class="active">Tendências</a>
+</nav>
+<div class="container">
+  <h1>Tendências do Dia</h1>
+  <p class="subtitle">Termos mais buscados agora no Mercado Livre Brasil</p>
+  <div id="content"><div class="loading">Carregando tendências...</div></div>
+</div>
+
+<script>
+async function carregar(){
+  try{
+    const r=await fetch('/api/tendencias');
+    if(!r.ok)throw new Error('API error '+r.status);
+    const d=await r.json();
+    render(d.trends||[]);
+  }catch(e){
+    document.getElementById('content').innerHTML=`<div class="alert">Não foi possível carregar as tendências: ${e.message}</div>`;
+  }
+}
+
+function render(trends){
+  if(!trends.length){
+    document.getElementById('content').innerHTML='<p style="color:#888">Nenhuma tendência encontrada.</p>';
+    return;
+  }
+
+  const now=new Date().toLocaleString('pt-BR');
+  let html=`<div class="updated">Atualizado em ${now}</div>
+    <div class="label">Termos em alta agora</div>
+    <div class="trend-grid">`;
+
+  trends.forEach((t,i)=>{
+    const keyword=typeof t==='string'?t:(t.keyword||t.name||JSON.stringify(t));
+    const pct=Math.round(100-(i/trends.length)*70);
+    html+=`<a class="trend-card" href="/?nicho=${encodeURIComponent(keyword)}" onclick="irParaNicho(event,'${keyword.replace(/'/g,'')}')">
+      <div class="trend-rank">#${i+1}</div>
+      <div class="trend-keyword">${keyword}</div>
+      <div class="trend-bar-wrap"><div class="trend-bar" style="width:${pct}%"></div></div>
+    </a>`;
+  });
+
+  html+=`</div>
+    <div class="action-row">
+      <button class="btn" onclick="carregar()">Atualizar</button>
+      <a href="/" class="btn-outline">← Explorar nichos</a>
+    </div>`;
+
+  document.getElementById('content').innerHTML=html;
+}
+
+function irParaNicho(e,keyword){
+  e.preventDefault();
+  window.location='/?nicho='+encodeURIComponent(keyword);
+}
+
+carregar();
+</script>
+</body>
+</html>

@@ -6,13 +6,9 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { q, limit = 10 } = req.query;
-  if (!q) return res.status(400).json({ error: 'Parâmetro q obrigatório' });
-
   try {
-    const url = `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(q)}&limit=${limit}`;
-    const data = await httpsGet(url);
-    return res.status(200).json(data);
+    const trends = await httpsGet('https://api.mercadolibre.com/trends/MLB');
+    return res.status(200).json({ trends: trends.slice(0, 20) });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

@@ -1,6 +1,6 @@
 {
   "name": "ml-niche-analyzer",
-  "version": "1.0.0",
-  "description": "Analisador de nichos do Mercado Livre",
+  "version": "2.0.0",
+  "description": "Analisador de nichos e produtos para dropshipping no Mercado Livre",
   "private": true
 }

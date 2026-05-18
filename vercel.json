@@ -2,6 +2,8 @@
   "version": 2,
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/comparar", "dest": "/comparar.html" },
+    { "src": "/tendencias", "dest": "/tendencias.html" },
     { "src": "/", "dest": "/index.html" }
   ]
 }
