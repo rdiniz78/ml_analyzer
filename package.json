@@ -1,0 +1,6 @@
+{
+  "name": "ml-niche-analyzer",
+  "version": "1.0.0",
+  "description": "Analisador de nichos do Mercado Livre",
+  "private": true
+}
