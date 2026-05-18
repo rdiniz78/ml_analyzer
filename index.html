@@ -7,7 +7,7 @@
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a;min-height:100vh}
-    nav{background:#fff;border-bottom:1px solid #e0e0e0;padding:0 2rem;display:flex;align-items:center;gap:0;height:52px}
+    nav{background:#fff;border-bottom:1px solid #e0e0e0;padding:0 2rem;display:flex;align-items:center;height:52px}
     nav a{text-decoration:none;color:#555;font-size:14px;padding:0 16px;height:52px;display:flex;align-items:center;border-bottom:2px solid transparent}
     nav a.active,nav a:hover{color:#3483fa;border-bottom-color:#3483fa}
     nav .logo{font-weight:700;color:#1a1a1a;margin-right:24px;font-size:15px}
@@ -49,10 +49,9 @@
     .score-track{flex:1;height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden}
     .score-fill{height:100%;border-radius:3px}
     .score-label{font-size:13px;font-weight:700;min-width:70px;text-align:right}
-    .hint{font-size:12px;color:#888;margin-top:6px}
+    .hint{font-size:12px;color:#aaa;margin-top:6px}
     .action-row{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap}
-    #prog-area{display:none}
-    #results{display:none}
+    #prog-area,#results{display:none}
   </style>
 </head>
 <body>
@@ -86,40 +85,39 @@
     <div class="prog-track"><div class="prog-fill" id="prog-bar" style="width:0%"></div></div>
     <div class="prog-text" id="prog-text">Iniciando...</div>
   </div>
-
   <div id="results"></div>
 </div>
 
 <script>
 const SUBCATS={
-  'moda masculina':['camiseta masculina premium','calça jeans masculina slim','polo masculina algodão','bermuda masculina esportiva','jaqueta masculina'],
-  'fitness musculação':['estação musculação casa','halteres ajustáveis kit','bicicleta ergométrica','banco supino ajustável','corda pular speed'],
-  'home office':['escrivaninha home office','cadeira ergonômica escritório','suporte monitor ajustável','teclado mecânico','luminária led mesa'],
-  'decoração casa':['quadro decorativo sala grande','tapete sala moderno','luminária decorativa pendente','vaso decorativo','prateleira parede madeira'],
-  'produtos pet':['cama pet ortopédica','comedouro automático pet','arranhador gato grande','coleira antipulgas','kit banho pet'],
-  'beleza skincare':['sérum vitamina c facial','protetor solar fps 50','máscara capilar hidratação','kit skincare completo','esponja maquiagem profissional'],
+  'moda masculina':['camiseta masculina algodao','calca jeans masculina slim','polo masculina','bermuda masculina esportiva','jaqueta masculina'],
+  'fitness musculacao':['estacao musculacao casa','halteres ajustaveis kit','bicicleta ergometrica','banco supino ajustavel','corda pular speed'],
+  'home office':['escrivaninha home office','cadeira ergonomica escritorio','suporte monitor ajustavel','teclado mecanico','luminaria led mesa'],
+  'decoracao casa':['quadro decorativo sala grande','tapete sala moderno','luminaria decorativa pendente','vaso decorativo','prateleira parede madeira'],
+  'produtos pet':['cama pet ortopedica','comedouro automatico pet','arranhador gato grande','coleira antipulgas','kit banho pet'],
+  'beleza skincare':['serum vitamina c facial','protetor solar fps 50','mascara capilar hidratacao','kit skincare completo','esponja maquiagem profissional'],
 };
 
+function norm(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
 function getSubs(n){
-  const k=Object.keys(SUBCATS).find(k=>n.toLowerCase().includes(k.split(' ')[0]));
-  return k?SUBCATS[k]:[n+' barato',n+' premium',n+' kit',n+' profissional',n+' completo'];
+  const k=Object.keys(SUBCATS).find(k=>norm(n).includes(norm(k).split(' ')[0]));
+  return k?SUBCATS[k]:[norm(n)+' barato',norm(n)+' premium',norm(n)+' kit',norm(n)+' profissional',norm(n)+' completo'];
 }
-
 function sel(btn,nicho){
   document.querySelectorAll('.nicho-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('custom').value='';
   iniciar(nicho);
 }
-
 function setProg(pct,txt){
   document.getElementById('prog-bar').style.width=pct+'%';
   document.getElementById('prog-text').textContent=txt;
 }
 
 async function fetchML(q){
-  const r=await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=8`);
-  if(!r.ok)throw new Error('API error '+r.status);
+  const url=`https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(q)}&limit=8`;
+  const r=await fetch(url);
+  if(!r.ok) throw new Error('HTTP '+r.status);
   return r.json();
 }
 
@@ -153,9 +151,9 @@ async function iniciar(nicho){
       const hasFab=items.some(x=>x.official_store_id);
       const total=d.paging?.total||0;
       const sc=score(total,avg,sold,sellers,hasFab);
-      lista.push({termo:subs[i],avg,sold,sellers,hasFab,total,sc,topId:items[0]?.id});
-    }catch(e){}
-    await new Promise(r=>setTimeout(r,200));
+      lista.push({termo:subs[i],avg,sold,sellers,hasFab,total,sc});
+    }catch(e){ console.warn(subs[i],e.message); }
+    await new Promise(r=>setTimeout(r,300));
   }
   setProg(100,'Concluído!');
   setTimeout(()=>{document.getElementById('prog-area').style.display='none';},600);
@@ -164,7 +162,10 @@ async function iniciar(nicho){
 
 function render(lista,nicho){
   const el=document.getElementById('results');
-  if(!lista.length){el.innerHTML='<p style="color:#888;text-align:center;padding:2rem">Nenhum resultado. Tente outro nicho.</p>';el.style.display='block';return;}
+  if(!lista.length){
+    el.innerHTML='<p style="color:#888;text-align:center;padding:2rem">Nenhum resultado. Tente outro nicho.</p>';
+    el.style.display='block';return;
+  }
   lista.sort((a,b)=>b.sc-a.sc);
   const avgT=Math.round(lista.reduce((a,p)=>a+p.avg,0)/lista.length);
   const totSold=lista.reduce((a,p)=>a+p.sold,0);
@@ -181,23 +182,22 @@ function render(lista,nicho){
 
   lista.forEach((p,i)=>{
     const isTop=i===0;
-    const sc=p.sc;
-    const col=sc>=70?'#00a650':sc>=45?'#9a6700':'#b22222';
+    const col=p.sc>=70?'#00a650':p.sc>=45?'#9a6700':'#b22222';
     const tTag=p.avg>=500?`<span class="tag tg">R$${Math.round(p.avg).toLocaleString('pt-BR')}</span>`:p.avg>=200?`<span class="tag ta">R$${Math.round(p.avg).toLocaleString('pt-BR')}</span>`:`<span class="tag tr">R$${Math.round(p.avg).toLocaleString('pt-BR')}</span>`;
     const sTag=p.sold>=150?`<span class="tag tg">${p.sold} vendidos</span>`:p.sold>=50?`<span class="tag ta">${p.sold} vendidos</span>`:`<span class="tag tr">${p.sold} vendidos</span>`;
     const cTag=p.sellers<=5?`<span class="tag tg">${p.sellers} vendedores</span>`:p.sellers<=10?`<span class="tag ta">${p.sellers} vendedores</span>`:`<span class="tag tr">${p.sellers} vendedores</span>`;
     const fTag=p.hasFab?`<span class="tag tr">fabricante presente</span>`:`<span class="tag tg">sem fabricante dominante</span>`;
     html+=`
-      <div class="opp-card ${isTop?'top-card':''}" onclick="window.location='/comparar?q=${encodeURIComponent(p.termo)}'">
+      <div class="opp-card ${isTop?'top-card':''}" onclick="window.open('https://www.mercadolivre.com.br/jm/search?q=${encodeURIComponent(p.termo)}','_blank')">
         ${isTop?'<div class="top-badge">Melhor oportunidade</div>':''}
         <div class="opp-title">${i+1}. ${p.termo}</div>
         <div class="opp-sub">${p.total.toLocaleString('pt-BR')} resultados no ML</div>
         <div class="tags">${tTag}${sTag}${cTag}${fTag}</div>
         <div class="score-row">
-          <div class="score-track"><div class="score-fill" style="width:${sc}%;background:${col}"></div></div>
-          <div class="score-label" style="color:${col}">Score ${sc}/100</div>
+          <div class="score-track"><div class="score-fill" style="width:${p.sc}%;background:${col}"></div></div>
+          <div class="score-label" style="color:${col}">Score ${p.sc}/100</div>
         </div>
-        <div class="hint">Clique para comparar produtos deste nicho →</div>
+        <div class="hint">Clique para ver no Mercado Livre →</div>
       </div>`;
   });
 
