@@ -1,7 +1,14 @@
 {
   "version": 2,
+  "functions": {
+    "api/*.js": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/api/search", "dest": "/api/search.js" },
+    { "src": "/api/produto", "dest": "/api/produto.js" },
+    { "src": "/api/tendencias", "dest": "/api/tendencias.js" },
     { "src": "/comparar", "dest": "/comparar.html" },
     { "src": "/tendencias", "dest": "/tendencias.html" },
     { "src": "/", "dest": "/index.html" }
